@@ -1,25 +1,23 @@
+"""This file contains a barebones implementation of the RSRAE model described in the associated paper. 
+Having the loss function described for the RSRAE+ algorithm, which is useful in a comp graph autograd context,
+written allows for extensibility to the operative paradigm in which one needs this to function.
+It is structured as follows:
+
+    1) computation block helper functions
+    2) AutoEncoder as base class
+    3) L2Norm nn.Module definition
+    4) RSRAE
+
+This will be expanded as the lil side project grows, but I wanted to put this out there in case people wanted
+to use this themselves, by at the very least having the structure and function of the model already set."""
+
+
+
+
+
+
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 def dim2(in_channels : int, out_channels : int, kernel_size, act : nn.Module):
@@ -45,8 +43,6 @@ def dim1Up(in_channels : int, out_channels : int, kernel_size : int, act : nn.Mo
             nn.ConvTranspose1d(in_channels, out_channels, kernel_size),
             act()
         )
-
-
 
 
 
@@ -86,7 +82,7 @@ def gen_enc_dec(dim : str, act : nn.Module, x : int, h : int, z : int, eOrD=None
         raise ValueError("Unexpected argument for dim, expects string of \"1\" or \"2\", got " + str(dim) )
 
 
-
+# 2
 class AutoEncoder(nn.Module):
   def __init__(self, en : nn.ModuleList, de : nn.ModuleList):
     super(AutoEncoder, self).__init__()
@@ -101,6 +97,12 @@ class AutoEncoder(nn.Module):
       X = module(X)
     return X
 
+
+
+
+
+
+# 3
 class L2Norm(nn.Module):
 
   def __init__(self):
@@ -112,13 +114,7 @@ class L2Norm(nn.Module):
 
 
 
-
-
-
-
-
-
-
+# 4
 class RSRAE(AutoEncoder):
   """Robust Subspace Recovery Auto Encoder"""
   def __init__(self, 
@@ -135,12 +131,12 @@ class RSRAE(AutoEncoder):
     self.lambda1 = lambda1
     self.lambda2 = lambda2
     self.dim = dim
-
+   
     self.MSE = nn.MSELoss()
     self.l2norm = L2Norm()
   
 
-
+  
   def forward(self, X):
     for module in self.encoder:
       X = module(X)
@@ -160,6 +156,8 @@ class RSRAE(AutoEncoder):
 
     return X_hat
   
+  
+
   def loss(self,out,d):
     rsr = [param for param in self.rsrlayer.parameters()][0] #since this is a generator, maybe theres a better way to access?
 
